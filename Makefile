@@ -14,7 +14,7 @@ fmt:
 	go fmt ./...
 
 mock:
-	moq -rm -out internal/repository/book_respository_mock.go internal/core/port BookRepository
+	moq -rm -out internal/book/book_respository_mock.go internal/book Repository
 
 # ==============================================================================
 # Docker support

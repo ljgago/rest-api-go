@@ -1,4 +1,4 @@
-package controller
+package book
 
 import (
 	"encoding/json"
@@ -7,26 +7,31 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-
-	"github.com/ljgago/api-rest/internal/core/domain"
-	"github.com/ljgago/api-rest/internal/core/port"
 )
 
+// Controller
+type Controller interface {
+	ListBooks() http.HandlerFunc
+	GetBook() http.HandlerFunc
+	CreateBook() http.HandlerFunc
+	UpdateBook() http.HandlerFunc
+	DeleteBook() http.HandlerFunc
+}
 
-type bookCtrl struct {
-	bookServ port.BookService
+type controller struct {
+	service Service
 }
 
 // NewBookController contructor for book controller.
-func NewBookController(b port.BookService) port.BookController {
-	return &bookCtrl{bookServ: b}
+func NewController(s Service) Controller {
+	return &controller{service: s}
 }
 
 // ListBooks handler function for request a list all books from database.
 // GET /api/books
-func (c *bookCtrl) ListBooks() http.HandlerFunc {
+func (c *controller) ListBooks() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		books, err := c.bookServ.Read()
+		books, err := c.service.Read()
 		if err != nil {
 			log.Println(err)
 			respondWithJSON(w, http.StatusInternalServerError, map[string]map[string]string{"errors": {"detail": err.Error()}})
@@ -34,13 +39,13 @@ func (c *bookCtrl) ListBooks() http.HandlerFunc {
 			return
 		}
 
-		respondWithJSON(w, http.StatusOK, map[string][]domain.Book{"data": books})
+		respondWithJSON(w, http.StatusOK, map[string][]Book{"data": books})
 	}
 }
 
 // GetBook handler function for request to get a book from database.
 // GET /api/books/{id}
-func (c *bookCtrl) GetBook() http.HandlerFunc {
+func (c *controller) GetBook() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Read the book ID
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
@@ -49,23 +54,23 @@ func (c *bookCtrl) GetBook() http.HandlerFunc {
 			respondWithJSON(w, http.StatusInternalServerError, map[string]map[string]string{"errors": {"detail": err.Error()}})
 			return
 		}
-		book, err := c.bookServ.ReadOne(int(id))
+		book, err := c.service.ReadOne(int(id))
 		if err != nil {
 			log.Println(err)
 			respondWithJSON(w, http.StatusBadRequest, map[string]map[string]string{"errors": {"detail": err.Error()}})
 			return
 		}
 
-		respondWithJSON(w, http.StatusOK, map[string]domain.Book{"data": book})
+		respondWithJSON(w, http.StatusOK, map[string]Book{"data": book})
 	}
 }
 
 // CreateBook is a handler function for request add a book to database.
 // POST /api/books <JSON Body>
-func (c *bookCtrl) CreateBook() http.HandlerFunc {
+func (c *controller) CreateBook() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Transform into RequestBody struct
-		var book domain.Book
+		var book Book
 		err := json.NewDecoder(r.Body).Decode(&book)
 		if err != nil {
 			log.Println(err)
@@ -73,20 +78,20 @@ func (c *bookCtrl) CreateBook() http.HandlerFunc {
 			return
 		}
 
-		book, err = c.bookServ.Create(book)
+		book, err = c.service.Create(book)
 		if err != nil {
 			log.Println(err)
 			respondWithJSON(w, http.StatusBadRequest, map[string]map[string]string{"errors": {"detail": "Bad Request"}})
 			return
 		}
 
-		respondWithJSON(w, http.StatusCreated, map[string]domain.Book{"data": book})
+		respondWithJSON(w, http.StatusCreated, map[string]Book{"data": book})
 	}
 }
 
 // UpdateBook is a handler function for request an update a book in database.
 // PUT /api/books/{id} <JSON Body>
-func (c *bookCtrl) UpdateBook() http.HandlerFunc {
+func (c *controller) UpdateBook() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// rawRequestBody, err := io.ReadAll(r.Body)
 		// if err != nil {
@@ -112,7 +117,7 @@ func (c *bookCtrl) UpdateBook() http.HandlerFunc {
 			return
 		}
 		// Transform into RequestBody struct
-		var book domain.Book
+		var book Book
 		err = json.NewDecoder(r.Body).Decode(&book)
 		if err != nil {
 			log.Println(err)
@@ -121,7 +126,7 @@ func (c *bookCtrl) UpdateBook() http.HandlerFunc {
 		}
 
 		// Update the book
-		b, err := c.bookServ.Update(id, book)
+		b, err := c.service.Update(id, book)
 		if err != nil {
 			log.Println("Hola", err)
 			log.Fatalln(err)
@@ -129,13 +134,13 @@ func (c *bookCtrl) UpdateBook() http.HandlerFunc {
 			return
 		}
 
-		respondWithJSON(w, http.StatusOK, map[string]domain.Book{"data": b})
+		respondWithJSON(w, http.StatusOK, map[string]Book{"data": b})
 	}
 }
 
 // UpdateBook is a handler function for request to delete a book in database.
 // DELETE /api/books/{id}
-func (c *bookCtrl) DeleteBook() http.HandlerFunc {
+func (c *controller) DeleteBook() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
@@ -144,7 +149,7 @@ func (c *bookCtrl) DeleteBook() http.HandlerFunc {
 			return
 		}
 
-		err = c.bookServ.Delete(id)
+		err = c.service.Delete(id)
 		if err != nil {
 			log.Fatalln(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -160,4 +165,3 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(payload)
 }
-

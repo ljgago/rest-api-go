@@ -1,4 +1,4 @@
-package controller
+package book
 
 import (
 	"bytes"
@@ -10,15 +10,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/ljgago/api-rest/internal/core/domain"
-	"github.com/ljgago/api-rest/internal/core/service"
-	"github.com/ljgago/api-rest/internal/repository"
-	"github.com/ljgago/api-rest/internal/routes"
 )
 
 func TestBookController(t *testing.T) {
-	responseBooks := []domain.Book{
+	responseBooks := []Book{
 		{
 			ID:     1,
 			Title:  "The Lord of the Rings: The Fellowship of the Ring",
@@ -31,28 +26,28 @@ func TestBookController(t *testing.T) {
 		},
 	}
 
-	responseBook := domain.Book{
+	responseBook := Book{
 		ID:     1,
 		Title:  "The Lord of the Rings: The Fellowship of the Ring",
 		Author: "J. R. R. Tolkien",
 	}
 
-	book := domain.Book{
+	book := Book{
 		Title:  "The Lord of the Rings: The Fellowship of the Ring",
 		Author: "J. R. R. Tolkien",
 	}
 
-	mockBookRepository := &repository.BookRepositoryMock{
-		ReadFunc: func() ([]domain.Book, error) {
+	mockBookRepository := &RepositoryMock{
+		ReadFunc: func() ([]Book, error) {
 			return responseBooks, nil
 		},
-		ReadOneFunc: func(id int) (domain.Book, error) {
+		ReadOneFunc: func(id int) (Book, error) {
 			return responseBook, nil
 		},
-		CreateFunc: func(book domain.Book) (domain.Book, error) {
+		CreateFunc: func(book Book) (Book, error) {
 			return responseBook, nil
 		},
-		UpdateFunc: func(id int, book domain.Book) (domain.Book, error) {
+		UpdateFunc: func(id int, book Book) (Book, error) {
 			return responseBook, nil
 		},
 		DeleteFunc: func(id int) error {
@@ -60,11 +55,11 @@ func TestBookController(t *testing.T) {
 		},
 	}
 
-	bookService := service.NewBookService(mockBookRepository)
-	bookController := NewBookController(bookService)
+	bookService := NewService(mockBookRepository)
+	bookController := NewController(bookService)
 
 	r := chi.NewRouter()
-	routes.BookRoutes(r, bookController)
+	Routes(r, bookController)
 
 	t.Run("ListBooks", func(t *testing.T) {
 		t.Parallel()
@@ -79,7 +74,7 @@ func TestBookController(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, res.Code)
 
-		data, err := json.Marshal(map[string][]domain.Book{"data": responseBooks})
+		data, err := json.Marshal(map[string][]Book{"data": responseBooks})
 		assert.NoError(t, err)
 
 		// the json.NewEncoder(w).Encode(books) add a "\n" to end of json
@@ -98,7 +93,7 @@ func TestBookController(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, res.Code)
 
-		data, err := json.Marshal(map[string]domain.Book{"data": responseBook})
+		data, err := json.Marshal(map[string]Book{"data": responseBook})
 		assert.NoError(t, err)
 
 		// the json.NewEncoder(w).Encode(books) add a "\n" to end of json
@@ -120,7 +115,7 @@ func TestBookController(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, res.Code)
 
-		data, err := json.Marshal(map[string]domain.Book{"data": responseBook})
+		data, err := json.Marshal(map[string]Book{"data": responseBook})
 		assert.NoError(t, err)
 
 		// the json.NewEncoder(w).Encode(books) add a "\n" to end of json
@@ -142,7 +137,7 @@ func TestBookController(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, res.Code)
 
-		data, err := json.Marshal(map[string]domain.Book{"data": responseBook})
+		data, err := json.Marshal(map[string]Book{"data": responseBook})
 		assert.NoError(t, err)
 
 		// the json.NewEncoder(w).Encode(books) add a "\n" to end of json

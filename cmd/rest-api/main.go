@@ -10,11 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
 
-	"github.com/ljgago/api-rest/internal/controller"
-	"github.com/ljgago/api-rest/internal/core/port"
-	"github.com/ljgago/api-rest/internal/core/service"
-	"github.com/ljgago/api-rest/internal/repository"
-	"github.com/ljgago/api-rest/internal/routes"
+	"github.com/ljgago/api-rest/internal/book"
 )
 
 type configDB struct {
@@ -46,16 +42,16 @@ func initDB() *sql.DB {
 	return db
 }
 
-func initialice(db *sql.DB) port.BookController {
-	bookRepository := repository.NewBookRepository(db)
-	bookService := service.NewBookService(bookRepository)
-	bookController := controller.NewBookController(bookService)
+func initialice(db *sql.DB) book.Controller {
+	bookRepository := book.NewRepository(db)
+	bookService := book.NewService(bookRepository)
+	bookController := book.NewController(bookService)
 	return bookController
 }
 
 func main() {
-	var serverPort string
-	flag.StringVar(&serverPort, "port", "3000", "server port")
+	var port string
+	flag.StringVar(&port, "port", "3000", "server port")
 
 	flag.Parse()
 
@@ -65,8 +61,8 @@ func main() {
 	bookController := initialice(db)
 
 	r := chi.NewRouter()
-	routes.BookRoutes(r, bookController)
+	book.Routes(r, bookController)
 
-	log.Println("Server on port :" + serverPort)
-	http.ListenAndServe(":"+serverPort, r)
+	log.Println("Server on port :" + port)
+	http.ListenAndServe(":"+port, r)
 }

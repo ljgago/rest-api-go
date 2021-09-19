@@ -1,4 +1,4 @@
-package domain
+package book
 
 // Book is the data structure that represents a book.
 type Book struct {
@@ -6,4 +6,3 @@ type Book struct {
 	Title  string `json:"title,omitempty"`
 	Author string `json:"author,omitempty"`
 }
-
