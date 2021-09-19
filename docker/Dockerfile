@@ -7,17 +7,17 @@ WORKDIR /app
 
 COPY ./ /app
 
-RUN go build ./cmd/api-rest
+RUN go build ./cmd/rest-api
 
-
+# ---
 # Intermediate stage: Build the binary
 FROM scratch as runner
 
-COPY --from=builder ./app/api-rest ./app/api-rest
+COPY --from=builder ./app/rest-api ./app/rest-api
 
 WORKDIR /app
 ENV config=docker
 
 EXPOSE 3000
 
-CMD ["api-rest"]
+CMD ["rest-api"]
